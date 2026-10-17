@@ -1,6 +1,7 @@
 package httperr
 
 import (
+	"context"
 	"errors"
 	"math"
 	"net/http"
@@ -26,14 +27,16 @@ func FromSDK(err error, opts Options) *Problem {
 	}
 	var se *v1.StatusError
 	if !errors.As(err, &se) {
-		return New(http.StatusBadGateway, err.Error())
+		if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+			p := New(http.StatusGatewayTimeout, "upstream call timed out or was cancelled; outcome unknown")
+			p.OutcomeUnknown = true
+			return p
+		}
+		return New(http.StatusBadGateway, "upstream error")
 	}
 
 	status := statusFor(se, opts)
 	p := New(status, se.Message)
-	if p.Detail == "" {
-		p.Detail = se.Error()
-	}
 	if se.GRPCCode != 0 {
 		p.GRPCCode = codes.Code(se.GRPCCode).String()
 	}

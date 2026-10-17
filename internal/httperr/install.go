@@ -8,8 +8,12 @@ func Install() {
 	huma.NewError = func(status int, message string, errs ...error) huma.StatusError {
 		p := New(status, message)
 		for _, e := range errs {
-			if d, ok := e.(huma.ErrorDetailer); ok {
+			switch d := e.(type) {
+			case nil:
+			case huma.ErrorDetailer:
 				p.Errors = append(p.Errors, d.ErrorDetail())
+			default:
+				p.Errors = append(p.Errors, &huma.ErrorDetail{Message: e.Error()})
 			}
 		}
 		return p

@@ -1,6 +1,7 @@
 package httperr
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
@@ -41,6 +42,8 @@ func TestFromSDK_Table(t *testing.T) {
 		{name: "unimplemented", in: &v1.StatusError{Code: v1.ErrorUnimplemented, GRPCCode: int32(codes.Unimplemented)}, wantStatus: 501},
 		{name: "internal", in: &v1.StatusError{Code: v1.ErrorInternal, GRPCCode: int32(codes.Internal)}, wantStatus: 502},
 		{name: "plain error", in: errors.New("boom"), wantStatus: 502},
+		{name: "context deadline", in: fmt.Errorf("x: %w", context.DeadlineExceeded), wantStatus: 504, wantOutcomeUnknown: true},
+		{name: "context canceled", in: context.Canceled, wantStatus: 504, wantOutcomeUnknown: true},
 		{name: "wrapped", in: fmt.Errorf("wrap: %w", &v1.StatusError{Code: v1.ErrorNotFound, GRPCCode: int32(codes.NotFound)}), wantStatus: 404},
 		{name: "terminal phase", in: &v1.StatusError{Code: v1.ErrorInternal, Message: "sandbox in terminal phase"}, wantStatus: 409, wantReason: "SANDBOX_TERMINAL_PHASE"},
 		{name: "code only not found", in: &v1.StatusError{Code: v1.ErrorNotFound}, wantStatus: 404},
@@ -63,6 +66,16 @@ func TestFromSDK_Table(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("sanitized 502", func(t *testing.T) {
+		p := FromSDK(errors.New("dial tcp 10.0.0.5:8080: refused"), Options{})
+		assert.Equal(t, "upstream error", p.Detail)
+	})
+
+	t.Run("sdk detail is message only", func(t *testing.T) {
+		p := FromSDK(&v1.StatusError{Code: v1.ErrorNotFound, GRPCCode: int32(codes.NotFound), Message: "sandbox missing", Cause: errors.New("dial tcp 10.0.0.5")}, Options{})
+		assert.Equal(t, "sandbox missing", p.Detail)
+	})
 
 	t.Run("nil", func(t *testing.T) { assert.Nil(t, FromSDK(nil, Options{})) })
 

@@ -2,6 +2,7 @@ package httperr
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -43,4 +44,12 @@ func TestInstall_HumaValidationUsesProblem(t *testing.T) {
 	assert.Equal(t, "x", p.Detail)
 	require.Len(t, p.Errors, 1)
 	assert.Equal(t, "body.name", p.Errors[0].Location)
+}
+
+func TestInstall_PreservesPlainErrors(t *testing.T) {
+	Install()
+	se := huma.Error422UnprocessableEntity("x", errors.New("plain"), nil)
+	p := se.(*Problem)
+	require.Len(t, p.Errors, 1)
+	assert.Equal(t, "plain", p.Errors[0].Message)
 }
