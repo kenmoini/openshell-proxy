@@ -15,13 +15,13 @@ func ServiceExposuresToSDK(in []dto.ServiceExposure) []v1.ServiceExposure {
 		out = append(out, v1.ServiceExposure{
 			Service:           e.Service,
 			TargetPort:        e.TargetPort,
-			AuthorizationMode: authModeToSDK(e.AuthorizationMode),
+			AuthorizationMode: AuthModeToSDK(e.AuthorizationMode),
 		})
 	}
 	return out
 }
 
-func authModeToSDK(s string) v1.ServiceAuthorizationMode {
+func AuthModeToSDK(s string) v1.ServiceAuthorizationMode {
 	switch s {
 	case "Strip":
 		return v1.ServiceAuthorizationModeStrip

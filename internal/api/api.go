@@ -71,6 +71,7 @@ func New(d Deps) (http.Handler, huma.API) {
 	registerSandboxes(api, d)
 	registerTemplates(api, d)
 	registerExec(api, d)
+	registerServices(api, d)
 
 	cfg := d.Cfg
 	h := middleware.Chain(mux,
