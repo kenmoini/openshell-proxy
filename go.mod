@@ -2,10 +2,14 @@ module github.com/kenmoini/openshell-proxy
 
 go 1.25.13
 
-require github.com/NVIDIA/OpenShell/sdk/go v0.0.0-20261013191600-5a7728c304b5
+require (
+	github.com/NVIDIA/OpenShell/sdk/go v0.0.0-20261013191600-5a7728c304b5
+	github.com/stretchr/testify v1.12.1
+	gopkg.in/yaml.v3 v3.0.1
+)
 
 require (
-	github.com/stretchr/testify v1.12.1 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/net v0.58.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
