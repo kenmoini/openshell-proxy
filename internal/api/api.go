@@ -70,6 +70,7 @@ func New(d Deps) (http.Handler, huma.API) {
 	registerWorkspaces(api, d)
 	registerSandboxes(api, d)
 	registerTemplates(api, d)
+	registerExec(api, d)
 
 	cfg := d.Cfg
 	h := middleware.Chain(mux,
