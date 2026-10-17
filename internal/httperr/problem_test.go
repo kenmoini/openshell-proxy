@@ -53,3 +53,11 @@ func TestInstall_PreservesPlainErrors(t *testing.T) {
 	require.Len(t, p.Errors, 1)
 	assert.Equal(t, "plain", p.Errors[0].Message)
 }
+
+func TestProblem_WithHeader(t *testing.T) {
+	p := New(http.StatusUnauthorized, "x").WithHeader("WWW-Authenticate", "Bearer")
+	assert.Equal(t, "Bearer", p.GetHeaders().Get("WWW-Authenticate"))
+	rec := httptest.NewRecorder()
+	Write(rec, httptest.NewRequest(http.MethodGet, "/", nil), p)
+	assert.Equal(t, "Bearer", rec.Header().Get("WWW-Authenticate"))
+}

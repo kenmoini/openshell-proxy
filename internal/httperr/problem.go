@@ -59,6 +59,12 @@ func (p *Problem) setHeader(k, v string) {
 	p.headers.Set(k, v)
 }
 
+// WithHeader sets a response header on p and returns p for chaining.
+func (p *Problem) WithHeader(k, v string) *Problem {
+	p.setHeader(k, v)
+	return p
+}
+
 func (p *Problem) setRetryAfter(seconds int) {
 	p.RetryAfterSeconds = &seconds
 	p.setHeader("Retry-After", strconv.Itoa(seconds))
