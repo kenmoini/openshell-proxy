@@ -1,0 +1,7 @@
+# build output
+/openshell-proxy
+/dist/
+# SDD scratch workspace
+/.superpowers/
+# editor/os
+.DS_Store
