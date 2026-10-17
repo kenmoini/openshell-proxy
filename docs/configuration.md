@@ -46,7 +46,7 @@ OSPROXY_GATEWAY_ADDRESS=gateway.example.com:443 go run ./cmd/openshell-proxy --c
 Local development against a plaintext gateway (no auth):
 
 ```sh
-OSPROXY_GATEWAY_ADDRESS=127.0.0.1:8080 OSPROXY_AUTH_MODE=none OSPROXY_GATEWAY_ALLOW_PLAINTEXT=true \
+OSPROXY_GATEWAY_ADDRESS=127.0.0.1:17670 OSPROXY_AUTH_MODE=none OSPROXY_GATEWAY_ALLOW_PLAINTEXT=true \
   go run ./cmd/openshell-proxy
 ```
 

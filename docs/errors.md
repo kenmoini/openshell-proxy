@@ -1,6 +1,6 @@
 # Errors
 
-Every error response is `application/problem+json` (RFC 9457) with extension members. This includes errors raised by request validation and by the proxy's own middleware, so clients need only one error parser.
+Error responses produced by the proxy are `application/problem+json` (RFC 9457) with extension members. This includes errors raised by request validation and by the proxy's own middleware, so clients need only one error parser. Requests to unknown paths or methods receive Go's default text 404/405.
 
 ## Problem shape
 
@@ -35,7 +35,7 @@ Every error response is `application/problem+json` (RFC 9457) with extension mem
 | `grpcCode` | string | Original gRPC code name (for example `NotFound`) when the gateway returned one. |
 | `retryAfterSeconds` | integer | Suggested wait before retrying; also sent as the `Retry-After` header. |
 | `outcomeUnknown` | boolean | `true` when the request may or may not have taken effect (see 504). Omitted when false. |
-| `requestId` | string | The `X-Request-ID` of the request, for correlating logs. |
+| `requestId` | string | The `X-Request-ID` of the request, for correlating logs. Present on every problem body, including validation errors. |
 
 Empty members are omitted from the JSON.
 
@@ -51,7 +51,7 @@ The mapper looks at the gRPC code first. Errors from the SDK without a gRPC code
 | `NOT_FOUND` | 404 | |
 | `ALREADY_EXISTS` | 409 | |
 | `ABORTED` | 409 | 412 when the request carried `If-Match`. |
-| `FAILED_PRECONDITION` | 412, 409 or 422 | 412 when the request carried `If-Match`; otherwise 409 when `reason` is `REQUEST_OUTCOME_UNCERTAIN` (the `REQUEST_*` idempotency family); otherwise 422. |
+| `FAILED_PRECONDITION` | 412, 409 or 422 | 412 when the request carried `If-Match`; otherwise 409 for any `reason` starting with `REQUEST_` (the idempotency family, e.g. `REQUEST_OUTCOME_UNCERTAIN`, `REQUEST_ID_PAYLOAD_MISMATCH`); otherwise 422. |
 | `RESOURCE_EXHAUSTED` | 429 | `Retry-After`. |
 | `UNAVAILABLE` | 503 | `Retry-After`. |
 | `DEADLINE_EXCEEDED`, `CANCELLED` | 504 | `outcomeUnknown: true`. |

@@ -23,12 +23,19 @@ This runs `go get`, `go mod tidy`, and `go test ./...`. Review the diff in
 
 ## Known signature change
 
-The SDK API changed after v0.1.4 (client/method signatures differ on newer
-commits). Expect to adapt call sites when moving past the v0.1.4 commit.
+The SDK API changed after v0.1.4. At v0.1.4:
 
-## Working inside the Claude Code sandbox
+```go
+Sandboxes().Create(ctx, ws, name, spec, labels map[string]string, opts ...v1.CreateOptions)
+// v1.CreateOptions{Annotations, ServiceExposures}
+```
 
-- Set `GOCACHE=$TMPDIR/gocache` on every go command; the default build cache is read-only.
-- Do not run `go get` or anything needing the network; the module cache is pre-populated.
-- The warning "go: writing stat cache ... operation not permitted" is harmless.
-- The `go` directive is `1.25.13` (the SDK's floor); no `toolchain` line is set.
+After v0.1.4 it became:
+
+```go
+Sandboxes().Create(ctx, ws, name, spec, opts ...v1.CreateOption)
+// functional options: v1.WithLabels, v1.WithAnnotations, v1.WithServiceExposures
+```
+
+`CreateSandboxFromTemplate` changed the same way. Expect to adapt call sites
+when moving past the v0.1.4 commit.

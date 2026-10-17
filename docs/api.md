@@ -1,6 +1,6 @@
 # API reference
 
-All routes live under `/v1` unless noted. The machine-readable contract is [`openapi.json`](../openapi.json) (also served at `/openapi.json`, with interactive docs at `/docs`). This page is derived from the route registrations in `internal/api/*.go`; the code is the source of truth. The proxy registers 61 `/v1` operations plus four raw routes.
+All routes live under `/v1` unless noted. The machine-readable contract is [`openapi.json`](../openapi.json) (also served at `/openapi.json`, with interactive docs at `/docs`). This page is derived from the route registrations in `internal/api/*.go`; the code is the source of truth. The proxy registers 61 `/v1` operations plus three raw routes (`/healthz`, `/readyz`, `/openapi.json`) and `/docs`.
 
 Authorization is decided by the OpenShell gateway, not the proxy. The "Gateway role / scope" column shows what the gateway typically requires (`scope / role`); "gateway-enforced" means the spec does not pin a specific scope. In every path below `{ws}` is `/v1/workspaces/{workspace}` and `{sb}` is `{ws}/sandboxes/{sandbox}`.
 
@@ -96,6 +96,8 @@ Authorization is decided by the OpenShell gateway, not the proxy. The "Gateway r
 | PUT | `{ws}/providers/{provider}/refresh/{key}` | Configure credential refresh | `provider:write / admin` | |
 | DELETE | `{ws}/providers/{provider}/refresh/{key}` | Delete credential refresh configuration | `provider:write / admin` | 200 or 202; `allowMissing`. |
 | POST | `{ws}/providers/{provider}/refresh/{key}/rotate` | Rotate a credential now | `provider:write / admin` | |
+
+Provider request bodies: `id`, `createdAt`, `deletionTimestamp` and `spec.credentialHandles` are server-owned and ignored on create and update. The workspace comes from the path; a non-empty `workspace` in the body that differs from the path is rejected with 400. `resourceVersion` in the body is kept as optimistic concurrency for updates, so a `GET` response can be edited and sent back to `PUT` unchanged.
 
 ## Provider profiles
 
