@@ -67,6 +67,32 @@ OSPROXY_GATEWAY_ADDRESS=<host:port> OSPROXY_GATEWAY_CA_FILE=<ca.pem> make run
 export TOKEN=<idp token>
 ```
 
+For something like Keycloak, use the following:
+
+```sh
+OPENSHELL_PROXY_URL="openshell-proxy-openshell.apps.ocp.example.com"
+KEYCLOAK_URL="keycloak.example.com"
+KEYCLOAK_REALM="openshell"
+
+ACCESS_TOKEN=$(curl -s -X POST \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_secret=${YOUR_CLIENT_SECRET}" \
+  -d "client_id=openshell-ci" \
+  -d "grant_type=client_credentials" \
+  "https://${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token" \
+  | jq -r '.access_token')
+
+curl \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  https://${OPENSHELL_PROXY_URL}/v1/whoami
+
+curl \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  https://${OPENSHELL_PROXY_URL}/v1/workspaces
+```
+
 Plaintext local gateway (no auth):
 
 ```sh
