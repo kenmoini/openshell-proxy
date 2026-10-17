@@ -1,12 +1,37 @@
 package dto
 
+import "github.com/danielgtaylor/huma/v2"
+
 // SettingValue is a tagged union: Type selects which member is meaningful.
 type SettingValue struct {
 	Type   string  `json:"type" enum:"string,bool,int,bytes" required:"true"`
 	String *string `json:"string,omitempty"`
 	Bool   *bool   `json:"bool,omitempty"`
 	Int    *int64  `json:"int,omitempty"`
-	Bytes  []byte  `json:"bytes,omitempty" doc:"Base64-encoded bytes."`
+	Bytes  *[]byte `json:"bytes,omitempty" doc:"Base64-encoded bytes."`
+}
+
+// Resolve requires exactly the member named by Type to be present.
+func (v *SettingValue) Resolve(_ huma.Context) []error {
+	present := map[string]bool{
+		"string": v.String != nil,
+		"bool":   v.Bool != nil,
+		"int":    v.Int != nil,
+		"bytes":  v.Bytes != nil,
+	}
+	if _, known := present[v.Type]; !known {
+		return nil // enum validation reports unknown types
+	}
+	if !present[v.Type] {
+		return []error{&huma.ErrorDetail{Location: "body.settingValue." + v.Type, Message: "member named by type is required", Value: v.Type}}
+	}
+	var errs []error
+	for k, p := range present {
+		if p && k != v.Type {
+			errs = append(errs, &huma.ErrorDetail{Location: "body.settingValue." + k, Message: "member does not match type " + v.Type, Value: v.Type})
+		}
+	}
+	return errs
 }
 
 // EffectiveSetting is a setting value with the scope it resolved from.

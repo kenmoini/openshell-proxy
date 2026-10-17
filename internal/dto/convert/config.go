@@ -20,7 +20,8 @@ func SettingValueFromSDK(v v1.SettingValue) dto.SettingValue {
 		i := v.IntVal
 		out.Int = &i
 	case v1.SettingValueBytes:
-		out.Bytes = append([]byte{}, v.BytesVal...)
+		b := append([]byte{}, v.BytesVal...)
+		out.Bytes = &b
 	}
 	return out
 }
@@ -43,7 +44,9 @@ func SettingValueToSDK(v dto.SettingValue) v1.SettingValue {
 			out.IntVal = *v.Int
 		}
 	case v1.SettingValueBytes:
-		out.BytesVal = v.Bytes
+		if v.Bytes != nil {
+			out.BytesVal = *v.Bytes
+		}
 	}
 	return out
 }

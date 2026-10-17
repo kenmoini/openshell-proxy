@@ -123,6 +123,9 @@ func TestPolicy_DraftFlow(t *testing.T) {
 	require.Equal(t, "tok", token)
 	require.Equal(t, float64(5), decode(t, rec.Body.Bytes())["policyVersion"])
 
+	rec = do(t, h, "POST", polBase+"/draft/chunks/c1/approve", `{}`, authHeader())
+	require.Equal(t, 422, rec.Code, rec.Body.String())
+
 	rec = do(t, h, "POST", polBase+"/draft/chunks/c1/reject", `{"reason":"nope"}`, authHeader())
 	require.Equal(t, 204, rec.Code, rec.Body.String())
 	require.Equal(t, "nope", reason)

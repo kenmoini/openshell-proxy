@@ -71,7 +71,7 @@ type PolicyStatusResult struct {
 
 // ApproveRequest approves one chunk, bound to its review token.
 type ApproveRequest struct {
-	ReviewToken string `json:"reviewToken,omitempty"`
+	ReviewToken string `json:"reviewToken" minLength:"1"`
 }
 
 // RejectRequest rejects one chunk.

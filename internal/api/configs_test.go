@@ -37,6 +37,22 @@ func TestSettingValue_Union(t *testing.T) {
 
 	rec := do(t, h, "PATCH", cfgPath, `{"settingKey":"a","settingValue":{"string":"hi"}}`, authHeader())
 	require.Equal(t, 422, rec.Code, rec.Body.String())
+
+	for _, b := range []string{
+		`{"settingKey":"a","settingValue":{"type":"int","string":"5"}}`,
+		`{"settingKey":"a","settingValue":{"type":"bool"}}`,
+		`{"settingKey":"a","settingValue":{"type":"string","string":"x","bool":true}}`,
+		`{"settingKey":"a","settingValue":{"type":"bytes"}}`,
+	} {
+		rec = do(t, h, "PATCH", cfgPath, b, authHeader())
+		require.Equal(t, 422, rec.Code, b+" "+rec.Body.String())
+	}
+	require.Len(t, got, 4, "invalid unions must not reach the gateway")
+
+	rec = do(t, h, "PATCH", cfgPath, `{"settingKey":"e","settingValue":{"type":"bytes","bytes":""}}`, authHeader())
+	require.Equal(t, 200, rec.Code, rec.Body.String())
+	require.Len(t, got, 5)
+	require.Equal(t, v1.SettingValue{Type: "bytes", BytesVal: []byte{}}, *got[4].SettingValue)
 }
 
 func TestConfig_GetSandbox(t *testing.T) {
@@ -110,4 +126,15 @@ func TestGatewayConfig_PatchGlobal(t *testing.T) {
 	require.True(t, got.Global)
 	require.Equal(t, "wsX", gotWS)
 	require.Equal(t, "6", decode(t, rec.Body.Bytes())["settingsRevision"])
+}
+
+func TestSettingValue_EmptyBytesRoundTrip(t *testing.T) {
+	stub := &gatewaytest.ConfigStub{GetGatewayFn: func(context.Context) (*v1.GatewayConfig, error) {
+		return &v1.GatewayConfig{Settings: map[string]v1.SettingValue{"b": {Type: "bytes", BytesVal: []byte{}}}}, nil
+	}}
+	h, _ := newTestAPI(t, gatewaytest.New(gatewaytest.WithConfig(stub)), nil)
+	rec := do(t, h, "GET", "/v1/gateway/config", "", authHeader())
+	require.Equal(t, 200, rec.Code, rec.Body.String())
+	b := decode(t, rec.Body.Bytes())["settings"].(map[string]any)["b"].(map[string]any)
+	require.Equal(t, "", b["bytes"])
 }
