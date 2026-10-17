@@ -24,5 +24,11 @@ func TestProvider_RoundTrip(t *testing.T) {
 			CredentialHandles:   map[string]types.CredentialHandle{"TOKEN": {Driver: "vault", Handle: "h", Metadata: map[string]string{"m": "n"}}},
 		},
 	}
-	require.Equal(t, in, ProviderToSDK(ProviderFromSDK(in)))
+	got := ProviderToSDK("ws", ProviderFromSDK(in))
+	want := *in
+	// Server-owned fields are not forwarded from request bodies.
+	want.ID, want.CreatedAt, want.DeletionTimestamp = "", time.Time{}, nil
+	want.Spec.CredentialHandles = nil
+	require.Equal(t, &want, got)
+	require.Equal(t, "path-ws", ProviderToSDK("path-ws", ProviderFromSDK(in)).Workspace)
 }

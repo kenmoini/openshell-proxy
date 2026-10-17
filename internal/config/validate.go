@@ -17,6 +17,9 @@ func (c *Config) Validate() error {
 	if !g.AllowPlaintext && strings.HasPrefix(g.Address, "http://") {
 		add("gateway.address uses http:// but gateway.allowPlaintext is false")
 	}
+	if g.InsecureSkipVerify && g.AllowPlaintext {
+		add("gateway.insecureSkipVerify must not be set when gateway.allowPlaintext is true")
+	}
 	if g.AllowPlaintext && g.CAFile != "" {
 		add("gateway.caFile must not be set when gateway.allowPlaintext is true")
 	}
@@ -45,6 +48,21 @@ func (c *Config) Validate() error {
 	default:
 		add("log.format must be one of json, text")
 	}
+
+	positive := func(name string, ok bool) {
+		if !ok {
+			add(name + " must be greater than zero")
+		}
+	}
+	t, l := c.Timeouts, c.Limits
+	positive("timeouts.request", t.Request > 0)
+	positive("timeouts.exec", t.Exec > 0)
+	positive("timeouts.waitMax", t.WaitMax > 0)
+	positive("timeouts.stream", t.Stream > 0)
+	positive("timeouts.sseHeartbeat", t.SSEHeartbeat > 0)
+	positive("limits.maxBody", l.MaxBody > 0)
+	positive("limits.maxExecBody", l.MaxExecBody > 0)
+	positive("limits.wsMaxFrame", l.WSMaxFrame > 0)
 	return errors.Join(errs...)
 }
 

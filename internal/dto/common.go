@@ -6,12 +6,28 @@ import (
 	"fmt"
 	"strconv"
 	"time"
+
+	"github.com/danielgtaylor/huma/v2"
 )
 
 // Uint64String is a uint64 that travels as a quoted decimal string in JSON so
 // that values above 2^53 survive JavaScript clients. It accepts either a JSON
 // integer or a quoted decimal string on input.
 type Uint64String uint64
+
+// Schema documents the wire form: a decimal string on output, a decimal
+// string or non-negative integer on input. Without it huma would derive
+// "integer" and reject the string form during request validation.
+func (Uint64String) Schema(_ huma.Registry) *huma.Schema {
+	zero := 0.0
+	return &huma.Schema{
+		OneOf: []*huma.Schema{
+			{Type: "string", Pattern: "^[0-9]+$"},
+			{Type: "integer", Minimum: &zero},
+		},
+		Description: "unsigned 64-bit integer; emitted as a decimal string, accepted as string or integer",
+	}
+}
 
 // MarshalJSON renders the value as a quoted decimal string.
 func (u Uint64String) MarshalJSON() ([]byte, error) {

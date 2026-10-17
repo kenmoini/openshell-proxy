@@ -39,6 +39,14 @@ type providerDeleteIn struct {
 	AllowMissingQuery
 }
 
+// checkBodyWorkspace rejects a body workspace that disagrees with the path.
+func checkBodyWorkspace(path, body string) error {
+	if body != "" && body != path {
+		return httperr.New(http.StatusBadRequest, "workspace in body must match path")
+	}
+	return nil
+}
+
 // registerProviders registers provider CRUD operations.
 func registerProviders(api huma.API, d Deps) {
 	op := func(id, method, path, summary string) huma.Operation {
@@ -51,7 +59,10 @@ func registerProviders(api huma.API, d Deps) {
 	create := op("createProvider", http.MethodPost, base, "Create a provider")
 	create.DefaultStatus = http.StatusCreated
 	huma.Register(api, create, func(ctx context.Context, in *providerCreateIn) (*providerOut, error) {
-		p, err := d.Client.Providers().Create(ctx, in.Workspace, convert.ProviderToSDK(in.Body))
+		if err := checkBodyWorkspace(in.Workspace, in.Body.Workspace); err != nil {
+			return nil, err
+		}
+		p, err := d.Client.Providers().Create(ctx, in.Workspace, convert.ProviderToSDK(in.Workspace, in.Body))
 		if err != nil {
 			return nil, sdkErr(err, false)
 		}
@@ -85,7 +96,10 @@ func registerProviders(api huma.API, d Deps) {
 			if in.Body.Name != in.Name {
 				return nil, httperr.New(http.StatusBadRequest, "body name must equal the path name")
 			}
-			sp := convert.ProviderToSDK(in.Body)
+			if err := checkBodyWorkspace(in.Workspace, in.Body.Workspace); err != nil {
+				return nil, err
+			}
+			sp := convert.ProviderToSDK(in.Workspace, in.Body)
 			p := d.Client.Providers()
 			if in.Ensure {
 				out, err := p.Ensure(ctx, in.Workspace, sp)

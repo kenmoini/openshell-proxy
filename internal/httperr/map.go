@@ -5,6 +5,7 @@ import (
 	"errors"
 	"math"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -125,7 +126,7 @@ func statusFromGRPC(c codes.Code, se *v1.StatusError, opts Options) int {
 		if opts.IfMatch {
 			return http.StatusPreconditionFailed
 		}
-		if se.ErrorInfo != nil && se.ErrorInfo.Reason == "REQUEST_OUTCOME_UNCERTAIN" {
+		if se.ErrorInfo != nil && strings.HasPrefix(se.ErrorInfo.Reason, "REQUEST_") {
 			return http.StatusConflict
 		}
 		return http.StatusUnprocessableEntity

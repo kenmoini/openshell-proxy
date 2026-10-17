@@ -29,7 +29,7 @@ type Deps struct {
 }
 
 // errorStatuses is the shared error list documented on every operation.
-var errorStatuses = []int{400, 401, 403, 404, 409, 412, 413, 422, 428, 429, 500, 502, 503, 504}
+var errorStatuses = []int{400, 401, 403, 404, 409, 412, 413, 422, 428, 429, 500, 501, 502, 503, 504}
 
 // metaLongRunning marks operations exempt from the per-request deadline.
 const metaLongRunning = "longRunning"
@@ -53,7 +53,16 @@ func New(d Deps) (http.Handler, huma.API) {
 	httperr.Install()
 
 	mux := http.NewServeMux()
-	api := humago.New(mux, humaConfig())
+	hc := humaConfig()
+	// huma writes validation and parse problems itself, bypassing httperr.Write;
+	// stamp the request ID on them here.
+	hc.Transformers = append(hc.Transformers, func(ctx huma.Context, _ string, v any) (any, error) {
+		if p, ok := v.(*httperr.Problem); ok && p.RequestID == "" {
+			p.RequestID = middleware.RequestIDFrom(ctx.Context())
+		}
+		return v, nil
+	})
+	api := humago.New(mux, hc)
 
 	api.UseMiddleware(func(ctx huma.Context, next func(huma.Context)) {
 		if lr, _ := ctx.Operation().Metadata[metaLongRunning].(bool); lr {

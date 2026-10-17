@@ -22,7 +22,7 @@ func TestUint64String_RoundTrip(t *testing.T) {
 	require.NoError(t, json.Unmarshal([]byte(`"7"`), &v))
 	require.Equal(t, Uint64String(7), v)
 
-	for _, bad := range []string{`"x"`, `-1`, `"-1"`, `1.5`, `true`, `null1`} {
+	for _, bad := range []string{`"x"`, `-1`, `"-1"`, `1.5`, `true`, `null1`, `""`, `"+5"`, `1e3`, `"0x10"`, `18446744073709551616`} {
 		require.Error(t, json.Unmarshal([]byte(bad), &v), bad)
 	}
 }

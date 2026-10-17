@@ -2,7 +2,6 @@ package convert
 
 import (
 	v1 "github.com/NVIDIA/OpenShell/sdk/go/openshell/v1"
-	"github.com/NVIDIA/OpenShell/sdk/go/openshell/v1/types"
 	"github.com/kenmoini/openshell-proxy/internal/dto"
 )
 
@@ -36,17 +35,19 @@ func ProviderFromSDK(p *v1.Provider) dto.Provider {
 	return out
 }
 
-// ProviderToSDK maps a provider DTO to the SDK type. Server-assigned fields
-// (ID, created time) are not set except those the client may carry.
-func ProviderToSDK(p dto.Provider) *v1.Provider {
-	out := &v1.Provider{
-		ID:              p.ID,
+// ProviderToSDK maps a provider request body to the SDK type. Only
+// client-owned fields are forwarded: name, type, labels, annotations, spec
+// (minus server-resolved credential handles) and the body-level optimistic
+// concurrency token ResourceVersion. ID, creation and deletion timestamps are
+// server-owned and dropped; Workspace comes from the request path.
+func ProviderToSDK(workspace string, p dto.Provider) *v1.Provider {
+	return &v1.Provider{
 		Name:            p.Name,
 		Type:            p.Type,
 		Labels:          p.Labels,
 		Annotations:     p.Annotations,
 		ResourceVersion: uint64(p.ResourceVersion),
-		Workspace:       p.Workspace,
+		Workspace:       workspace,
 		Spec: v1.ProviderSpec{
 			Credentials:         p.Spec.Credentials,
 			Config:              p.Spec.Config,
@@ -54,15 +55,4 @@ func ProviderToSDK(p dto.Provider) *v1.Provider {
 			ProfileWorkspace:    p.Spec.ProfileWorkspace,
 		},
 	}
-	if p.CreatedAt != nil {
-		out.CreatedAt = *p.CreatedAt
-	}
-	out.DeletionTimestamp = p.DeletionTimestamp
-	if len(p.Spec.CredentialHandles) > 0 {
-		out.Spec.CredentialHandles = make(map[string]types.CredentialHandle, len(p.Spec.CredentialHandles))
-		for k, h := range p.Spec.CredentialHandles {
-			out.Spec.CredentialHandles[k] = types.CredentialHandle{Driver: h.Driver, Handle: h.Handle, Metadata: h.Metadata}
-		}
-	}
-	return out
 }

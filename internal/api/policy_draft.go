@@ -42,7 +42,11 @@ func registerPolicyDraft(api huma.API, d Deps, op func(id, method, path, summary
 
 	huma.Register(api, noContent(op("rejectPolicyDraftChunk", http.MethodPost, draft+"/chunks/{chunk}/reject", "Reject a draft chunk")),
 		func(ctx context.Context, in *chunkRejectIn) (*struct{}, error) {
-			if err := pol().RejectDraftChunk(ctx, in.Workspace, in.Sandbox, in.Chunk, in.Body.Reason); err != nil {
+			var reason string
+			if in.Body != nil {
+				reason = in.Body.Reason
+			}
+			if err := pol().RejectDraftChunk(ctx, in.Workspace, in.Sandbox, in.Chunk, reason); err != nil {
 				return nil, sdkErr(err, false)
 			}
 			return nil, nil
@@ -68,10 +72,10 @@ func registerPolicyDraft(api huma.API, d Deps, op func(id, method, path, summary
 	huma.Register(api, op("approveAllPolicyDraftChunks", http.MethodPost, draft+"/approve-all", "Approve all draft chunks"),
 		func(ctx context.Context, in *approveAllIn) (*approveAllOut, error) {
 			var opts []v1.ApproveAllOption
-			if in.Body.IncludeSecurityFlagged {
+			if in.Body != nil && in.Body.IncludeSecurityFlagged {
 				opts = append(opts, v1.WithIncludeSecurityFlagged())
 			}
-			if len(in.Body.Approvals) > 0 {
+			if in.Body != nil && len(in.Body.Approvals) > 0 {
 				opts = append(opts, v1.WithDraftApprovals(convert.DraftApprovalsToSDK(in.Body.Approvals)...))
 			}
 			r, err := pol().ApproveAllDraftChunks(ctx, in.Workspace, in.Sandbox, opts...)

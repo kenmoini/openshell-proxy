@@ -57,7 +57,7 @@ type chunkApproveIn struct {
 
 type chunkRejectIn struct {
 	ChunkPath
-	Body dto.RejectRequest
+	Body *dto.RejectRequest
 }
 
 type chunkEditIn struct {
@@ -67,7 +67,7 @@ type chunkEditIn struct {
 
 type approveAllIn struct {
 	SandboxPath
-	Body dto.ApproveAllRequest
+	Body *dto.ApproveAllRequest
 }
 
 type policyStatusIn struct {

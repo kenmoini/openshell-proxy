@@ -46,6 +46,17 @@ func TestInstall_HumaValidationUsesProblem(t *testing.T) {
 	assert.Equal(t, "body.name", p.Errors[0].Location)
 }
 
+func TestInstall_RedactsBodyValues(t *testing.T) {
+	Install()
+	se := huma.Error422UnprocessableEntity("x",
+		&huma.ErrorDetail{Message: "bad", Location: "body.spec.credentials.TOKEN", Value: "s3cret"},
+		&huma.ErrorDetail{Message: "bad", Location: "query.pageSize", Value: 5})
+	p := se.(*Problem)
+	require.Len(t, p.Errors, 2)
+	assert.Nil(t, p.Errors[0].Value)
+	assert.Equal(t, 5, p.Errors[1].Value)
+}
+
 func TestInstall_PreservesPlainErrors(t *testing.T) {
 	Install()
 	se := huma.Error422UnprocessableEntity("x", errors.New("plain"), nil)

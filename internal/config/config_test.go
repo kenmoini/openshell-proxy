@@ -142,6 +142,38 @@ func TestValidate_PlaintextRules(t *testing.T) {
 	assert.NoError(t, c.Validate())
 }
 
+func TestValidate_InsecureSkipVerifyWithPlaintext(t *testing.T) {
+	c := Default()
+	c.Gateway.Address = "127.0.0.1:1"
+	c.Gateway.AllowPlaintext = true
+	c.Gateway.InsecureSkipVerify = true
+	c.Auth.Mode = ModeNone
+	err := c.Validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "insecureSkipVerify")
+}
+
+func TestValidate_NonPositiveTimeoutsAndLimits(t *testing.T) {
+	muts := map[string]func(*Config){
+		"timeouts.request":      func(c *Config) { c.Timeouts.Request = 0 },
+		"timeouts.exec":         func(c *Config) { c.Timeouts.Exec = -time.Second },
+		"timeouts.waitMax":      func(c *Config) { c.Timeouts.WaitMax = 0 },
+		"timeouts.stream":       func(c *Config) { c.Timeouts.Stream = -1 },
+		"timeouts.sseHeartbeat": func(c *Config) { c.Timeouts.SSEHeartbeat = 0 },
+		"limits.maxBody":        func(c *Config) { c.Limits.MaxBody = 0 },
+		"limits.maxExecBody":    func(c *Config) { c.Limits.MaxExecBody = -1 },
+		"limits.wsMaxFrame":     func(c *Config) { c.Limits.WSMaxFrame = 0 },
+	}
+	for name, m := range muts {
+		c := Default()
+		c.Gateway.Address = "gw:443"
+		m(&c)
+		err := c.Validate()
+		require.Error(t, err, name)
+		assert.Contains(t, err.Error(), name)
+	}
+}
+
 func TestValidate_ModeAndTLSFiles(t *testing.T) {
 	c := Default()
 	c.Gateway.Address = "gw:443"
