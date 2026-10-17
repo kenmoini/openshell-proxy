@@ -6,6 +6,7 @@ import (
 	"time"
 
 	v1 "github.com/NVIDIA/OpenShell/sdk/go/openshell/v1"
+	"github.com/NVIDIA/OpenShell/sdk/go/openshell/v1/types"
 	"github.com/kenmoini/openshell-proxy/internal/gateway/gatewaytest"
 	"github.com/stretchr/testify/require"
 )
@@ -132,8 +133,10 @@ func TestSandboxes_ProvidersAttachDetach(t *testing.T) {
 func TestSandboxes_Logs(t *testing.T) {
 	// The SDK fake does not implement GetLogs, so stub it.
 	calls := 0
+	var gotOpts []v1.LogOption
 	stub := &gatewaytest.SandboxStub{GetLogsFn: func(_ context.Context, ws, sb string, opts ...v1.LogOption) (*v1.LogResult, error) {
 		calls++
+		gotOpts = opts
 		require.Equal(t, "ws1", ws)
 		require.Equal(t, "sb1", sb)
 		return &v1.LogResult{}, nil
@@ -145,9 +148,14 @@ func TestSandboxes_Logs(t *testing.T) {
 	require.Equal(t, []any{}, body["lines"])
 	require.EqualValues(t, 0, body["bufferTotal"])
 
-	rec = do(t, h, "GET", sbBase+"/sb1/logs?lines=10&since=2026-01-01T00:00:00Z&sources=gateway,sandbox&minLevel=INFO", "", authHeader())
+	rec = do(t, h, "GET", sbBase+"/sb1/logs?lines=50&since=2026-01-01T00:00:00Z&sources=gateway,%20sandbox,&minLevel=WARN", "", authHeader())
 	require.Equal(t, 200, rec.Code, rec.Body.String())
 	require.Equal(t, 2, calls)
+	cfg := types.ApplyLogOptions(gotOpts)
+	require.EqualValues(t, 50, cfg.Lines())
+	require.True(t, cfg.Since().Equal(time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)))
+	require.Equal(t, []string{"gateway", "sandbox"}, cfg.Sources())
+	require.Equal(t, "WARN", cfg.MinLevel())
 
 	rec = do(t, h, "GET", sbBase+"/sb1/logs?since=yesterday", "", authHeader())
 	require.Equal(t, 400, rec.Code, rec.Body.String())

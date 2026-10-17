@@ -69,8 +69,14 @@ func registerSandboxWait(api huma.API, d Deps, op func(id, method, path, summary
 				}
 				opts = append(opts, v1.WithLogSince(t))
 			}
-			if in.Sources != "" {
-				opts = append(opts, v1.WithLogSources(strings.Split(in.Sources, ",")...))
+			var sources []string
+			for _, src := range strings.Split(in.Sources, ",") {
+				if src = strings.TrimSpace(src); src != "" {
+					sources = append(sources, src)
+				}
+			}
+			if len(sources) > 0 {
+				opts = append(opts, v1.WithLogSources(sources...))
 			}
 			if in.MinLevel != "" {
 				opts = append(opts, v1.WithLogMinLevel(in.MinLevel))
