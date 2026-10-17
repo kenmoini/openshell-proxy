@@ -1,0 +1,11 @@
+{
+  "id": "ws-id-1",
+  "name": "team-a",
+  "workspace": "root",
+  "createdAt": "2026-01-02T03:04:05Z",
+  "deletionTimestamp": "2026-02-03T04:05:06Z",
+  "labels": {"env": "dev"},
+  "annotations": {"note": "hi"},
+  "resourceVersion": "18446744073709551615",
+  "phase": "Terminating"
+}
