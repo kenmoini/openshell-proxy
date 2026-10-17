@@ -1,0 +1,184 @@
+{
+  "version": 7,
+  "filesystem": {
+    "includeWorkdir": true,
+    "readOnly": [
+      "/usr"
+    ],
+    "readWrite": [
+      "/tmp",
+      "/work"
+    ]
+  },
+  "landlock": {
+    "compatibility": "best_effort"
+  },
+  "process": {
+    "runAsUser": "sandbox",
+    "runAsGroup": "sandbox"
+  },
+  "networkPolicies": {
+    "github": {
+      "name": "github",
+      "endpoints": [
+        {
+          "host": "api.example.com",
+          "port": 443,
+          "ports": [
+            443,
+            8443
+          ],
+          "protocol": "rest",
+          "tls": "Skip",
+          "enforcement": "Enforce",
+          "access": "ReadWrite",
+          "rules": [
+            {
+              "allow": {
+                "method": "GET",
+                "path": "/v1/**",
+                "command": "cmd",
+                "query": {
+                  "q": {
+                    "glob": "a*",
+                    "any": [
+                      "x",
+                      "y"
+                    ]
+                  },
+                  "r": {
+                    "glob": "b?"
+                  }
+                },
+                "operationType": "query",
+                "operationName": "Op",
+                "fields": [
+                  "f1",
+                  "f2"
+                ],
+                "params": {
+                  "q": {
+                    "glob": "a*",
+                    "any": [
+                      "x",
+                      "y"
+                    ]
+                  },
+                  "r": {
+                    "glob": "b?"
+                  }
+                }
+              }
+            },
+            {}
+          ],
+          "allowedIps": [
+            "10.0.0.0/8",
+            "192.168.1.1"
+          ],
+          "denyRules": [
+            {
+              "method": "DELETE",
+              "path": "/admin",
+              "command": "rm",
+              "query": {
+                "q": {
+                  "glob": "a*",
+                  "any": [
+                    "x",
+                    "y"
+                  ]
+                },
+                "r": {
+                  "glob": "b?"
+                }
+              },
+              "operationType": "mutation",
+              "operationName": "Nuke",
+              "fields": [
+                "z"
+              ],
+              "params": {
+                "q": {
+                  "glob": "a*",
+                  "any": [
+                    "x",
+                    "y"
+                  ]
+                },
+                "r": {
+                  "glob": "b?"
+                }
+              }
+            }
+          ],
+          "allowEncodedSlash": true,
+          "persistedQueries": "allowlist",
+          "graphqlPersistedQueries": {
+            "abc": {
+              "operationType": "query",
+              "operationName": "Get",
+              "fields": [
+                "id",
+                "name"
+              ]
+            }
+          },
+          "graphqlMaxBodyBytes": 4096,
+          "path": "/graphql",
+          "websocketCredentialRewrite": true,
+          "requestBodyCredentialRewrite": true,
+          "allowUninspectedCredentials": true,
+          "providerCredentialed": true,
+          "advisorProposed": true,
+          "credentialSigning": "sigv4",
+          "signingService": "s3",
+          "signingRegion": "us-east-1",
+          "jsonrpcMaxBodyBytes": 2048,
+          "mcp": {
+            "strictToolNames": true,
+            "allowAllKnownMcpMethods": false,
+            "versions": [
+              "2025-11-25"
+            ]
+          },
+          "credentialBinding": {
+            "provider": "github"
+          }
+        },
+        {
+          "host": "plain.example.com",
+          "port": 80
+        }
+      ],
+      "binaries": [
+        {
+          "path": "/usr/bin/git"
+        },
+        {
+          "path": "/usr/bin/curl"
+        }
+      ]
+    }
+  },
+  "networkMiddlewares": {
+    "audit": {
+      "name": "audit",
+      "middleware": "logger",
+      "config": {
+        "level": "debug",
+        "n": 3
+      },
+      "onError": "fail_closed",
+      "endpoints": {
+        "include": [
+          "*.example.com"
+        ],
+        "exclude": [
+          "internal.example.com"
+        ]
+      },
+      "order": 5
+    }
+  }
+}
