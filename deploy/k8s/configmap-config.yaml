@@ -1,0 +1,45 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openshell-proxy-config
+data:
+  config.yaml: |
+    server:
+      addr: ":8080"            # listen address
+      tls:
+        certFile: ""           # set certFile and keyFile together to serve HTTPS
+        keyFile: ""
+      readHeaderTimeout: 10s
+      idleTimeout: 120s
+
+    gateway:
+      address: "gateway.example.com:443"   # REQUIRED, no default; OpenShell gRPC gateway
+      caFile: ""               # PEM CA bundle for the gateway; not allowed with allowPlaintext
+      insecureSkipVerify: false
+      allowPlaintext: false    # plaintext gRPC (http://); requires auth.mode: none
+
+    auth:
+      mode: bearer-passthrough # bearer-passthrough | none
+      localSanityCheck: true
+      allowQueryToken: false   # accept the token in a query parameter (e.g. for WebSocket)
+
+    timeouts:
+      request: 30s
+      exec: 10m
+      waitMax: 10m
+      stream: 1h
+      sseHeartbeat: 15s
+
+    limits:                    # bytes, or KiB/MiB/GiB suffix
+      maxBody: 1MiB
+      maxExecBody: 4MiB
+      wsMaxFrame: 1MiB
+
+    cors:
+      allowedOrigins: []
+      allowCredentials: false
+
+    log:
+      level: info              # debug | info | warn | error
+      format: json             # json | text
