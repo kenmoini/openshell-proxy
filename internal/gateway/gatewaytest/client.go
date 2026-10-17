@@ -17,6 +17,7 @@ type Client struct {
 	refresh   v1.RefreshInterface
 	ssh       v1.SSHInterface
 	tcp       v1.TCPInterface
+	sandboxes *SandboxStub
 	fakeOpts  []fake.ClientOption
 	providers *providers
 }
@@ -33,6 +34,9 @@ func New(opts ...Option) *Client {
 		o(c)
 	}
 	c.Client = fake.NewClient(c.fakeOpts...)
+	if c.sandboxes != nil && c.sandboxes.SandboxInterface == nil {
+		c.sandboxes.SandboxInterface = c.Client.Sandboxes()
+	}
 	c.providers = &providers{ProviderInterface: c.Client.Providers(), c: c}
 	return c
 }
@@ -48,6 +52,17 @@ func WithProfiles(v v1.ProfileInterface) Option { return func(c *Client) { c.pro
 func WithRefresh(v v1.RefreshInterface) Option  { return func(c *Client) { c.refresh = v } }
 func WithSSH(v v1.SSHInterface) Option          { return func(c *Client) { c.ssh = v } }
 func WithTCP(v v1.TCPInterface) Option          { return func(c *Client) { c.tcp = v } }
+
+// WithSandboxOverrides replaces Sandboxes() with s; unset methods fall back to the fake.
+func WithSandboxOverrides(s *SandboxStub) Option { return func(c *Client) { c.sandboxes = s } }
+
+// Sandboxes returns the stub when configured, else the fake's sandboxes.
+func (c *Client) Sandboxes() v1.SandboxInterface {
+	if c.sandboxes != nil {
+		return c.sandboxes
+	}
+	return c.Client.Sandboxes()
+}
 
 func (c *Client) Exec() v1.ExecInterface {
 	if c.exec != nil {

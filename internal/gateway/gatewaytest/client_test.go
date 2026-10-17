@@ -90,3 +90,20 @@ func TestStaticPager(t *testing.T) {
 		t.Fatalf("StatusErr = %+v", e)
 	}
 }
+
+func TestWithSandboxOverrides(t *testing.T) {
+	stub := &gatewaytest.SandboxStub{GetFn: func(ctx context.Context, ws, name string) (*v1.Sandbox, error) {
+		return &v1.Sandbox{Name: "stubbed"}, nil
+	}}
+	c := gatewaytest.New(gatewaytest.WithSandboxOverrides(stub))
+	c.AddSandbox("w", &v1.Sandbox{Name: "real"})
+	got, err := c.Sandboxes().Get(context.Background(), "w", "real")
+	if err != nil || got.Name != "stubbed" {
+		t.Fatalf("Get = %+v, %v", got, err)
+	}
+	// Unset methods fall back to the fake.
+	list, err := c.Sandboxes().ListAll(context.Background(), "w")
+	if err != nil || len(list) != 1 || list[0].Name != "real" {
+		t.Fatalf("ListAll = %+v, %v", list, err)
+	}
+}
