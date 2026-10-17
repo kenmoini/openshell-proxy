@@ -75,6 +75,7 @@ func New(d Deps) (http.Handler, huma.API) {
 	registerProviders(api, d)
 	registerProfiles(api, d)
 	registerRefresh(api, d)
+	registerConfig(api, d)
 
 	cfg := d.Cfg
 	h := middleware.Chain(mux,
