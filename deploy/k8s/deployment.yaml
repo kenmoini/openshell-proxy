@@ -27,6 +27,13 @@ spec:
             - name: http
               containerPort: 8080
           env:
+            # Change this to your OpenShell gRPC gateway address (host:port)
+            - name: OSPROXY_GATEWAY_ADDRESS
+              value: "hub-cluster-openshell.openshell.svc.cluster.local:8080"
+
+            - name: OSPROXY_GATEWAY_CA_FILE
+              value: "/etc/openshell-ca-tls/ca.crt"
+
             - name: POD_NAME
               valueFrom: { fieldRef: { fieldPath: metadata.name } }
             - name: POD_NAMESPACE
@@ -40,6 +47,9 @@ spec:
           volumeMounts:
             - name: openshell-proxy-config
               mountPath: /etc/openshell-proxy
+              readOnly: true
+            - name: openshell-ca-tls
+              mountPath: /etc/openshell-ca-tls
               readOnly: true
           resources:
             requests: { cpu: 100m, memory: 128Mi }
@@ -61,3 +71,6 @@ spec:
         - name: openshell-proxy-config
           configMap:
             name: openshell-proxy-config
+        - name: openshell-ca-tls
+          secret:
+            secretName: openshell-ca-tls
